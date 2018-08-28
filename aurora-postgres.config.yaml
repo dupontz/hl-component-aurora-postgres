@@ -1,0 +1,22 @@
+maximum_availability_zones: 5
+hostname: aurora2pg
+
+cluster_parameters:
+
+instance_parameters:
+
+# Set `ip_blocks` here or export from vpc component
+ip_blocks:
+  local:
+    - 127.0.0.1/32
+
+
+security_group:
+  -
+    rules:
+      -
+        IpProtocol: tcp
+        FromPort: 5432
+        ToPort: 5432
+    ips:
+      - stack
