@@ -1,9 +1,9 @@
 maximum_availability_zones: 5
 hostname: aurora2pg
 
-cluster_parameters:
+# cluster_parameters:
 
-instance_parameters:
+# instance_parameters:
 
 # Set `ip_blocks` here or export from vpc component
 ip_blocks:
