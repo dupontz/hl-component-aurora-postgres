@@ -1,6 +1,8 @@
 maximum_availability_zones: 5
 hostname: aurora2pg
 
+cluster_port: 5432
+
 # cluster_parameters:
 
 # instance_parameters:
