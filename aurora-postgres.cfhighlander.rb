@@ -1,9 +1,14 @@
 CfhighlanderTemplate do
+
+  Name 'aurora-postgres'
+  Description "Highlander Aurora Postgres component #{component_version}"
   DependsOn 'vpc@1.2.0'
+
   Parameters do
     ComponentParam 'EnvironmentName', 'dev', isGlobal: true
     ComponentParam 'EnvironmentType', 'development', isGlobal: true, allowedValues: ['development', 'production']
     ComponentParam 'StackOctet', isGlobal: true
+
     MappingParam('WriterInstanceType') do
       map 'EnvironmentType'
       attribute 'WriterInstanceType'
@@ -19,10 +24,8 @@ CfhighlanderTemplate do
     maximum_availability_zones.times do |az|
       ComponentParam "SubnetPersistence#{az}"
     end
+
     ComponentParam 'SnapshotID'
-    ComponentParam 'MasterUsername', 'master'
-    ComponentParam 'MasterUserPassword', 'pa33w0rd'
-    
     ComponentParam 'EnableReader', 'false'
     ComponentParam 'VPCId', type: 'AWS::EC2::VPC::Id'
   end

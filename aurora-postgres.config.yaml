@@ -3,6 +3,10 @@ hostname: aurora2pg
 
 cluster_port: 5432
 
+master_login:
+  username_ssm_param: /rds/AURORA_POSTGRES_MASTER_USERNAME
+  password_ssm_param: /rds/AURORA_POSTGRES_MASTER_PASSWORD
+
 # cluster_parameters:
 
 # instance_parameters:

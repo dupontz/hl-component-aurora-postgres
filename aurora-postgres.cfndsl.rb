@@ -39,8 +39,8 @@ CloudFormation do
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
     SnapshotIdentifier Ref(:SnapshotID)
     SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
-    MasterUsername FnIf('UseUsernameAndPassword',Ref(:MasterUsername), Ref('AWS::NoValue'))
-    MasterUserPassword FnIf('UseUsernameAndPassword',Ref(:MasterUserPassword), Ref('AWS::NoValue'))
+    MasterUsername  FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm:', FnSub(master_login['username_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
+    MasterUserPassword FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
     Port cluster_port
