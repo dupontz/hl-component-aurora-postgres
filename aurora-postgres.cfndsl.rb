@@ -3,6 +3,9 @@ CloudFormation do
   Description "#{component_name} - #{component_version}"
 
   Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
+  Condition("UseUsernameAndPassword", FnEquals(Ref(:SnapshotID), ''))
+  Condition("UseSnapshotID", FnNot(FnEquals(Ref(:SnapshotID), '')))
+
   az_conditions_resources('SubnetPersistence', maximum_availability_zones)
 
   tags = []
@@ -26,7 +29,7 @@ CloudFormation do
 
   RDS_DBClusterParameterGroup(:DBClusterParameterGroup) {
     Description FnJoin(' ', [ Ref(:EnvironmentName), component_name, 'cluster parameter group' ])
-    Family 'aurora-postgresql'
+    Family 'aurora-postgresql9.6'
     Parameters cluster_parameters if defined? cluster_parameters
     Tags tags + [{ Key: 'Name', Value: FnJoin('-', [ Ref(:EnvironmentName), component_name, 'cluster-parameter-group' ])}]
   }
@@ -35,8 +38,12 @@ CloudFormation do
     Engine 'aurora-postgresql'
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
     SnapshotIdentifier Ref(:SnapshotID)
+    SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
+    MasterUsername  FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm:', FnSub(master_login['username_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
+    MasterUserPassword FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
+    Port cluster_port
     Tags tags + [{ Key: 'Name', Value: FnJoin('-', [ Ref(:EnvironmentName), component_name, 'cluster' ])}]
   }
 
