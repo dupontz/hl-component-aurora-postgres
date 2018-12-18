@@ -7,8 +7,8 @@ master_login:
   username_ssm_param: /rds/AURORA_POSTGRES_MASTER_USERNAME
   password_ssm_param: /rds/AURORA_POSTGRES_MASTER_PASSWORD
 
-# cluster_parameters:
-
+cluster_parameters:
+  timezone: "UTC"
 # instance_parameters:
 
 # Set `ip_blocks` here or export from vpc component
