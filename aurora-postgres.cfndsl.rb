@@ -49,8 +49,8 @@ CloudFormation do
   }
 
   RDS_DBClusterParameterGroup(:DBClusterParameterGroup) {
-    Description FnSub("Aurora postgres #{component_name} parameters for the ${EnvironmentName} environment")
-    Family 'aurora-postgresql9.6'
+    Description FnSub("Aurora postgres #{component_name} cluster parameters for the ${EnvironmentName} environment")
+    Family family
     Parameters cluster_parameters if defined? cluster_parameters
     Tags aurora_tags
   }
@@ -72,7 +72,7 @@ CloudFormation do
   }
 
   RDS_DBParameterGroup(:DBInstanceParameterGroup) {
-    Description FnJoin(' ', [ Ref(:EnvironmentName), component_name, 'instance parameter group' ])
+    Description FnSub("Aurora postgres #{component_name} instance parameters for the ${EnvironmentName} environment")
     Family family
     Parameters instance_parameters if defined? instance_parameters
     Tags aurora_tags
