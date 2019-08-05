@@ -83,6 +83,7 @@ CloudFormation do
     DBParameterGroupName Ref(:DBInstanceParameterGroup)
     DBClusterIdentifier Ref(:DBCluster)
     Engine 'aurora-postgresql'
+    EngineVersion engine_version if defined? engine_version
     PubliclyAccessible 'false'
     DBInstanceClass Ref(:WriterInstanceType)
     Tags aurora_tags
@@ -94,6 +95,7 @@ CloudFormation do
     DBParameterGroupName Ref(:DBInstanceParameterGroup)
     DBClusterIdentifier Ref(:DBCluster)
     Engine 'aurora-postgresql'
+    EngineVersion engine_version if defined? engine_version
     PubliclyAccessible 'false'
     DBInstanceClass Ref(:ReaderInstanceType)
     Tags aurora_tags
