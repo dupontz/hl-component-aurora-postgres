@@ -1,32 +1,18 @@
 CfhighlanderTemplate do
 
   Name 'aurora-postgres'
-  Description "Highlander Aurora Postgres component #{component_version}"
-  DependsOn 'vpc@1.2.0'
 
   Parameters do
     ComponentParam 'EnvironmentName', 'dev', isGlobal: true
     ComponentParam 'EnvironmentType', 'development', isGlobal: true, allowedValues: ['development', 'production']
-    ComponentParam 'StackOctet', isGlobal: true
-
-    MappingParam('WriterInstanceType') do
-      map 'EnvironmentType'
-      attribute 'WriterInstanceType'
-    end
-    MappingParam('ReaderInstanceType') do
-      map 'EnvironmentType'
-      attribute 'ReaderInstanceType'
-    end
-    MappingParam('DnsDomain') do
-      map 'AccountId'
-      attribute 'DnsDomain'
-    end
-    maximum_availability_zones.times do |az|
-      ComponentParam "SubnetPersistence#{az}"
-    end
-
+    ComponentParam 'WriterInstanceType'
+    ComponentParam 'ReaderInstanceType'
+    ComponentParam 'DnsDomain'
     ComponentParam 'SnapshotID'
-    ComponentParam 'EnableReader', 'false'
+    ComponentParam 'EnableReader', 'false', allowedValues: ['true', 'false']
     ComponentParam 'VPCId', type: 'AWS::EC2::VPC::Id'
+    ComponentParam 'SubnetIds', type: 'CommaDelimitedList'
+    ComponentParam 'KmsKeyId' if (defined? kms) && (kms)
   end
+  
 end

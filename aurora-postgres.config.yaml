@@ -1,5 +1,5 @@
-maximum_availability_zones: 5
 hostname: aurora2pg
+hostname_read_endpoint: aurora2pg-read
 
 cluster_port: 5432
 
@@ -10,19 +10,3 @@ master_login:
 cluster_parameters:
   timezone: "UTC"
 # instance_parameters:
-
-# Set `ip_blocks` here or export from vpc component
-ip_blocks:
-  local:
-    - 127.0.0.1/32
-
-
-security_group:
-  -
-    rules:
-      -
-        IpProtocol: tcp
-        FromPort: 5432
-        ToPort: 5432
-    ips:
-      - stack
