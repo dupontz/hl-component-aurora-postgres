@@ -65,6 +65,7 @@ CloudFormation do
     MasterUserPassword FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
+    DatabaseName FnSub(database_name) if defined? database_name
     StorageEncrypted storage_encrypted if defined? storage_encrypted
     KmsKeyId Ref('KmsKeyId') if (defined? kms) && (kms)
     Port cluster_port
