@@ -119,4 +119,9 @@ CloudFormation do
     ResourceRecords [ FnGetAtt('DBCluster','Endpoint.Address') ]
   }
 
+  Output(:DBClusterId) {
+    Value(Ref(:DBCluster))
+    Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-dbcluster-id")
+  }
+
 end
