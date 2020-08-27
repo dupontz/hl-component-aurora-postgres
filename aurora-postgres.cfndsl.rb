@@ -42,6 +42,11 @@ CloudFormation do
     Tags aurora_tags
   end
 
+  Output(:SecurityGroupId) {
+    Value(FnGetAtt(:SecurityGroup, :GroupId))
+    Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-securitygroup-id")
+  }
+
   RDS_DBSubnetGroup(:DBClusterSubnetGroup) {
     SubnetIds Ref('SubnetIds')
     DBSubnetGroupDescription FnSub("Aurora postgres #{component_name} subnets for the ${EnvironmentName} environment")
