@@ -13,6 +13,8 @@ CfhighlanderTemplate do
     ComponentParam 'VPCId', type: 'AWS::EC2::VPC::Id'
     ComponentParam 'SubnetIds', type: 'CommaDelimitedList'
     ComponentParam 'KmsKeyId' if (defined? kms) && (kms)
+
+    ComponentParam 'NamespaceId' if defined? service_discovery
   end
-  
+
 end
