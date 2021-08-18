@@ -90,6 +90,8 @@ CloudFormation do
     DBClusterIdentifier Ref(:DBCluster)
     Engine 'aurora-postgresql'
     EngineVersion engine_version if defined? engine_version
+    AutoMinorVersionUpgrade minor_upgrade if defined? minor_upgrade
+    PreferredMaintenanceWindow maint_window if defined? maint_window
     PubliclyAccessible 'false'
     DBInstanceClass Ref(:WriterInstanceType)
     Tags aurora_tags
