@@ -3,6 +3,8 @@ CloudFormation do
   Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
   Condition("UseUsernameAndPassword", FnEquals(Ref(:SnapshotID), ''))
   Condition("UseSnapshotID", FnNot(FnEquals(Ref(:SnapshotID), '')))
+  Condition("CreateHostRecord", FnNot(FnEquals(Ref(:DnsDomain), '')))
+  Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
 
   aurora_tags = []
   aurora_tags << { Key: 'Name', Value: FnSub("${EnvironmentName}-#{component_name}") }
@@ -110,7 +112,7 @@ CloudFormation do
   }
   
   Route53_RecordSet(:DBClusterReaderRecord) {
-    Condition(:EnableReader)
+    Condition(:CreateReaderRecord)
     HostedZoneName FnJoin('', [ Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.'])
     Name FnJoin('', [ hostname_read_endpoint, '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
     Type 'CNAME'
@@ -119,6 +121,7 @@ CloudFormation do
   }
 
   Route53_RecordSet(:DBHostRecord) {
+    Condition(:CreateHostRecord)
     HostedZoneName FnJoin('', [ Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.'])
     Name FnJoin('', [ hostname, '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
     Type 'CNAME'
