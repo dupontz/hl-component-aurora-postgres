@@ -21,8 +21,8 @@ CloudFormation do
     }
     if rule['security_group_id']
       sg_rule['SourceSecurityGroupId'] = FnSub(rule['security_group_id'])
-    else 
-      sg_rule['CidrIp'] = FnSub(rule['ip']) 
+    else
+      sg_rule['CidrIp'] = FnSub(rule['ip'])
     end
     if rule['desc']
       sg_rule['Description'] = FnSub(rule['desc'])
@@ -40,7 +40,7 @@ CloudFormation do
         Description: "outbound all for ports",
         IpProtocol: -1,
       }
-    ]) 
+    ])
     Tags aurora_tags
   end
 
@@ -110,7 +110,7 @@ CloudFormation do
     DBInstanceClass Ref(:ReaderInstanceType)
     Tags aurora_tags
   }
-  
+
   Route53_RecordSet(:DBClusterReaderRecord) {
     Condition(:CreateReaderRecord)
     HostedZoneName FnJoin('', [ Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.'])
@@ -128,6 +128,40 @@ CloudFormation do
     TTL '60'
     ResourceRecords [ FnGetAtt('DBCluster','Endpoint.Address') ]
   }
+
+  registry = {}
+  service_discovery = external_parameters.fetch(:service_discovery, {})
+
+  unless service_discovery.empty?
+    ServiceDiscovery_Service(:ServiceRegistry) {
+      NamespaceId Ref(:NamespaceId)
+      Name service_discovery['name']  if service_discovery.has_key? 'name'
+      DnsConfig({
+        DnsRecords: [{
+          TTL: 60,
+          Type: 'CNAME'
+        }],
+        RoutingPolicy: 'WEIGHTED'
+      })
+      if service_discovery.has_key? 'healthcheck'
+        HealthCheckConfig service_discovery['healthcheck']
+      else
+        HealthCheckCustomConfig ({ FailureThreshold: (service_discovery['failure_threshold'] || 1) })
+      end
+    }
+
+    ServiceDiscovery_Instance(:RegisterInstance) {
+      InstanceAttributes(
+        AWS_INSTANCE_CNAME: FnGetAtt('DBCluster','Endpoint.Address')
+      )
+      ServiceId Ref(:ServiceRegistry)
+    }
+
+    Output(:ServiceRegistry) {
+      Value(Ref(:ServiceRegistry))
+      Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-CloudMapService")
+    }
+  end
 
   Output(:DBClusterId) {
     Value(Ref(:DBCluster))
