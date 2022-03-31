@@ -62,14 +62,36 @@ CloudFormation do
     Tags aurora_tags
   }
 
+  secrets_manager = external_parameters.fetch(:secret_username, false)
+  if secrets_manager
+    SecretsManager_Secret(:SecretCredentials) {
+      GenerateSecretString ({
+        SecretStringTemplate: "{\"username\":\"#{secrets_manager}\"}",
+        GenerateStringKey: "password",
+        ExcludeCharacters: "\"@'`/\\"
+      })
+    }
+
+    instance_username = FnJoin('', [ '{{resolve:secretsmanager:', Ref(:SecretCredentials), ':SecretString:username}}' ])
+    instance_password = FnJoin('', [ '{{resolve:secretsmanager:', Ref(:SecretCredentials), ':SecretString:password}}' ])
+
+    Output(:SecretCredentials) {
+      Value(Ref(:SecretCredentials))
+      Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-Secret")
+    }
+  else
+    instance_username = FnJoin('', [ '{{resolve:ssm:', FnSub(master_login['username_ssm_param']), ':1}}' ])
+    instance_password = FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ])
+  end
+
   RDS_DBCluster(:DBCluster) {
     Engine 'aurora-postgresql'
     EngineVersion engine_version if defined? engine_version
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
     SnapshotIdentifier Ref(:SnapshotID)
     SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
-    MasterUsername  FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm:', FnSub(master_login['username_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
-    MasterUserPassword FnIf('UseUsernameAndPassword', FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ]), Ref('AWS::NoValue'))
+    MasterUsername  FnIf('UseUsernameAndPassword', instance_username, Ref('AWS::NoValue'))
+    MasterUserPassword  FnIf('UseUsernameAndPassword', instance_password, Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
     DatabaseName FnSub(database_name) if defined? database_name
