@@ -1,0 +1,10 @@
+test_metadata:
+  type: config
+  name: cloudwatch_log_exports
+  description: set the description for your test
+
+family: aurora-postgresql12
+engine: 12.10
+
+cloudwatch_log_exports:
+  - postgresql
