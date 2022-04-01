@@ -167,11 +167,13 @@ CloudFormation do
   storage_encrypted = external_parameters.fetch(:storage_encrypted, nil)
   kms = external_parameters.fetch(:kms, false)
   cluster_maintenance_window = external_parameters.fetch(:cluster_maintenance_window, nil)
+  cloudwatch_log_exports = external_parameters.fetch(:cloudwatch_log_exports, [])
 
   RDS_DBCluster(:DBCluster) {
     Engine 'aurora-postgresql'
     EngineVersion engine_version unless engine_version.nil?
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
+    EnableCloudwatchLogsExports cloudwatch_log_exports if cloudwatch_log_exports.any?
     PreferredMaintenanceWindow cluster_maintenance_window unless cluster_maintenance_window.nil?
     SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
     MasterUsername  FnIf('UseUsernameAndPassword', instance_username, Ref('AWS::NoValue'))
