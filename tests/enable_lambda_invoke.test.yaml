@@ -1,0 +1,15 @@
+test_metadata:
+  type: config
+  name: enable_lambda_invoke
+  description: set the description for your test
+
+test_parameters:
+  MyFunction: postgres-lambda
+
+family: aurora-postgresql12
+engine: 12.10
+
+invoke_lambdas:
+  - my-function
+  - ${EnvironmentName}-function
+  - ${MyFunction}
