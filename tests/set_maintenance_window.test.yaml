@@ -1,0 +1,11 @@
+test_metadata:
+  type: config
+  name: set_maintenance_window
+  description: set the cluster and db instance maintenance windows
+
+family: aurora-postgresql12
+engine: 12.10
+
+cluster_maintenance_window: Sun:05:00-Sun:06:00
+writer_maintenance_window: Sun:06:00-Sun:07:00
+reader_maintenance_window: Sun:08:00-Sun:09:00

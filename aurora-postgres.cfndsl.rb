@@ -7,12 +7,14 @@ CloudFormation do
   Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
 
   aurora_tags = []
-  aurora_tags << { Key: 'Name', Value: FnSub("${EnvironmentName}-#{component_name}") }
+  tags = external_parameters.fetch(:tags, {})
+  aurora_tags << { Key: 'Name', Value: FnSub("${EnvironmentName}-#{external_parameters[:component_name]}") }
   aurora_tags << { Key: 'Environment', Value: Ref(:EnvironmentName) }
   aurora_tags << { Key: 'EnvironmentType', Value: Ref(:EnvironmentType) }
-  aurora_tags.push(*tags.map {|k,v| {Key: k, Value: FnSub(v)}}).uniq { |h| h[:Key] } if defined? tags
+  aurora_tags.push(*tags.map {|k,v| {Key: k, Value: FnSub(v)}}).uniq { |h| h[:Key] }
 
   ingress = []
+  security_group_rules = external_parameters.fetch(:security_group_rules, [])
   security_group_rules.each do |rule|
     sg_rule = {
       FromPort: cluster_port,
@@ -28,7 +30,7 @@ CloudFormation do
       sg_rule['Description'] = FnSub(rule['desc'])
     end
     ingress << sg_rule
-  end if defined?(security_group_rules)
+  end
 
   EC2_SecurityGroup(:SecurityGroup) do
     VpcId Ref('VPCId')
@@ -55,10 +57,12 @@ CloudFormation do
     Tags aurora_tags
   }
 
+  cluster_parameters = external_parameters.fetch(:cluster_parameters, nil)
+
   RDS_DBClusterParameterGroup(:DBClusterParameterGroup) {
     Description FnSub("Aurora postgres #{component_name} cluster parameters for the ${EnvironmentName} environment")
     Family family
-    Parameters cluster_parameters if defined? cluster_parameters
+    Parameters cluster_parameters unless cluster_parameters.nil?
     Tags aurora_tags
   }
 
@@ -84,42 +88,56 @@ CloudFormation do
     instance_password = FnJoin('', [ '{{resolve:ssm-secure:', FnSub(master_login['password_ssm_param']), ':1}}' ])
   end
 
+  engine_version = external_parameters.fetch(:engine_version, nil)
+  database_name = external_parameters.fetch(:database_name, nil)
+  storage_encrypted = external_parameters.fetch(:storage_encrypted, nil)
+  kms = external_parameters.fetch(:kms, false)
+  cluster_maintenance_window = external_parameters.fetch(:cluster_maintenance_window, nil)
+
   RDS_DBCluster(:DBCluster) {
     Engine 'aurora-postgresql'
-    EngineVersion engine_version if defined? engine_version
+    EngineVersion engine_version unless engine_version.nil?
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
-    SnapshotIdentifier Ref(:SnapshotID)
+    PreferredMaintenanceWindow cluster_maintenance_window unless cluster_maintenance_window.nil?
     SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
     MasterUsername  FnIf('UseUsernameAndPassword', instance_username, Ref('AWS::NoValue'))
     MasterUserPassword  FnIf('UseUsernameAndPassword', instance_password, Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
-    DatabaseName FnSub(database_name) if defined? database_name
-    StorageEncrypted storage_encrypted if defined? storage_encrypted
-    KmsKeyId Ref('KmsKeyId') if (defined? kms) && (kms)
-    Port cluster_port
+    DatabaseName FnSub(database_name) unless database_name.nil?
+    StorageEncrypted storage_encrypted unless storage_encrypted.nil?
+    KmsKeyId Ref('KmsKeyId') if kms
+    Port external_parameters[:cluster_port]
     Tags aurora_tags
   }
+
+  instance_parameters = external_parameters.fetch(:instance_parameters, nil)
 
   RDS_DBParameterGroup(:DBInstanceParameterGroup) {
     Description FnSub("Aurora postgres #{component_name} instance parameters for the ${EnvironmentName} environment")
     Family family
-    Parameters instance_parameters if defined? instance_parameters
+    Parameters instance_parameters unless instance_parameters.nil?
     Tags aurora_tags
   }
+
+  minor_upgrade = external_parameters.fetch(:minor_upgrade, nil)
+  maint_window = external_parameters.fetch(:maint_window, nil) # key kept for backwards compatibility
+  writer_maintenance_window = external_parameters.fetch(:writer_maintenance_window, maint_window)
 
   RDS_DBInstance(:DBClusterInstanceWriter) {
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
     DBParameterGroupName Ref(:DBInstanceParameterGroup)
     DBClusterIdentifier Ref(:DBCluster)
     Engine 'aurora-postgresql'
-    EngineVersion engine_version if defined? engine_version
-    AutoMinorVersionUpgrade minor_upgrade if defined? minor_upgrade
-    PreferredMaintenanceWindow maint_window if defined? maint_window
+    EngineVersion engine_version unless engine_version.nil?
+    AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
+    PreferredMaintenanceWindow writer_maintenance_window unless writer_maintenance_window.nil?
     PubliclyAccessible 'false'
     DBInstanceClass Ref(:WriterInstanceType)
     Tags aurora_tags
   }
+
+  reader_maintenance_window = external_parameters.fetch(:reader_maintenance_window, nil)
 
   RDS_DBInstance(:DBClusterInstanceReader) {
     Condition(:EnableReader)
@@ -127,7 +145,9 @@ CloudFormation do
     DBParameterGroupName Ref(:DBInstanceParameterGroup)
     DBClusterIdentifier Ref(:DBCluster)
     Engine 'aurora-postgresql'
-    EngineVersion engine_version if defined? engine_version
+    EngineVersion engine_version unless engine_version.nil?
+    AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
+    PreferredMaintenanceWindow reader_maintenance_window unless reader_maintenance_window.nil?
     PubliclyAccessible 'false'
     DBInstanceClass Ref(:ReaderInstanceType)
     Tags aurora_tags
@@ -136,7 +156,7 @@ CloudFormation do
   Route53_RecordSet(:DBClusterReaderRecord) {
     Condition(:CreateReaderRecord)
     HostedZoneName FnJoin('', [ Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.'])
-    Name FnJoin('', [ hostname_read_endpoint, '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
+    Name FnJoin('', [ external_parameters[:hostname_read_endpoint], '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
     Type 'CNAME'
     TTL '60'
     ResourceRecords [ FnGetAtt('DBCluster','ReadEndpoint.Address') ]
@@ -145,7 +165,7 @@ CloudFormation do
   Route53_RecordSet(:DBHostRecord) {
     Condition(:CreateHostRecord)
     HostedZoneName FnJoin('', [ Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.'])
-    Name FnJoin('', [ hostname, '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
+    Name FnJoin('', [ external_parameters[:hostname], '.', Ref('EnvironmentName'), '.', Ref('DnsDomain'), '.' ])
     Type 'CNAME'
     TTL '60'
     ResourceRecords [ FnGetAtt('DBCluster','Endpoint.Address') ]
