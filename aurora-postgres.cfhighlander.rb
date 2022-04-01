@@ -2,6 +2,8 @@ CfhighlanderTemplate do
 
   Name 'aurora-postgres'
 
+  DependsOn 'lib-iam@0.2.0'
+
   Parameters do
     ComponentParam 'EnvironmentName', 'dev', isGlobal: true
     ComponentParam 'EnvironmentType', 'development', isGlobal: true, allowedValues: ['development', 'production']

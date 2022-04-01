@@ -13,6 +13,80 @@ CloudFormation do
   aurora_tags << { Key: 'EnvironmentType', Value: Ref(:EnvironmentType) }
   aurora_tags.push(*tags.map {|k,v| {Key: k, Value: FnSub(v)}}).uniq { |h| h[:Key] }
 
+
+  cluster_roles = []
+  invoke_lambdas = external_parameters.fetch(:invoke_lambdas, [])
+
+  if invoke_lambdas.any?
+    policy = {
+      'invoke-lambda' => [
+        {
+          'action' => ['lambda:InvokeFunction'],
+          'resource' => invoke_lambdas.map {|lambda_name| FnSub("arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function/#{lambda_name}")}
+        }
+      ]
+    }
+
+    IAM_Role(:AuroraLambdaInvokeIAMRole) {
+      AssumeRolePolicyDocument service_assume_role_policy('rds')
+      Policies iam_role_policies(policy)
+    }
+
+    cluster_roles << {
+      FeatureName: 'Lambda',
+      RoleArn: FnGetAtt(:AuroraLambdaInvokeIAMRole, :Arn)    
+    }
+  end
+
+  s3_export = external_parameters.fetch(:s3_export, nil)
+
+  if s3_export
+    policy = {
+      'invoke-lambda' => [
+        {
+          'action' => ['S3:PutObject'],
+          'resource' => FnSub("aws:arn:s3:::#{s3_export}")
+        }
+      ]
+    }
+
+    IAM_Role(:Auroras3ExportIAMRole) {
+      AssumeRolePolicyDocument service_assume_role_policy('rds')
+      Policies iam_role_policies(policy)
+    }
+
+    cluster_roles << {
+      FeatureName: 's3Export',
+      RoleArn: FnGetAtt(:Auroras3ExportIAMRole, :Arn)    
+    }
+  end
+
+  s3_import = external_parameters.fetch(:s3_import, nil)
+
+  if s3_import
+    policy = {
+      'invoke-lambda' => [
+        {
+          'action' => ['S3:PutObject'],
+          'resource' => [
+            FnSub("aws:arn:s3:::#{s3_export}"),
+            FnSub("aws:arn:s3:::#{s3_export}/*")
+          ]
+        }
+      ]
+    }
+
+    IAM_Role(:Auroras3ImportIAMRole) {
+      AssumeRolePolicyDocument service_assume_role_policy('rds')
+      Policies iam_role_policies(policy)
+    }
+
+    cluster_roles << {
+      FeatureName: 's3Import',
+      RoleArn: FnGetAtt(:Auroras3ImportIAMRole, :Arn)    
+    }
+  end
+
   ingress = []
   security_group_rules = external_parameters.fetch(:security_group_rules, [])
   security_group_rules.each do |rule|
@@ -109,6 +183,7 @@ CloudFormation do
     KmsKeyId Ref('KmsKeyId') if kms
     Port external_parameters[:cluster_port]
     Tags aurora_tags
+    AssociatedRoles cluster_roles if cluster_roles.any?
   }
 
   instance_parameters = external_parameters.fetch(:instance_parameters, nil)

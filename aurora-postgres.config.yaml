@@ -9,4 +9,3 @@ master_login:
 
 cluster_parameters:
   timezone: "UTC"
-# instance_parameters:
