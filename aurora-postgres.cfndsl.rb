@@ -189,6 +189,7 @@ CloudFormation do
     AssociatedRoles cluster_roles if cluster_roles.any?
 
     if engine_mode == 'serverless'
+      EnableHttpEndpoint Ref(:EnableHttpEndpoint)
       ServerlessV2ScalingConfiguration({
         MinCapacity: Ref('MinCapacity'),
         MaxCapacity: Ref('MaxCapacity')

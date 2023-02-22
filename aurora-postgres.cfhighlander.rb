@@ -14,8 +14,9 @@ CfhighlanderTemplate do
     ComponentParam 'KmsKeyId' if (defined? kms) && (kms)
 
     if defined?(engine_mode) && engine_mode == 'serverless'
-      ComponentParam 'MaxCapacity', 2, allowedValues: [1, 2, 4, 8, 16, 32, 64, 128, 256]
-      ComponentParam 'MinCapacity', 2, allowedValues: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+      ComponentParam 'MaxCapacity', '2'
+      ComponentParam 'MinCapacity', '0.5'
+      ComponentParam 'EnableHttpEndpoint', 'false', allowedValues: ['true', 'false']
     else
       ComponentParam 'WriterInstanceType'
       ComponentParam 'ReaderInstanceType'
