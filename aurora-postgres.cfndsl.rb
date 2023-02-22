@@ -168,10 +168,11 @@ CloudFormation do
   cluster_maintenance_window = external_parameters.fetch(:cluster_maintenance_window, nil)
   cloudwatch_log_exports = external_parameters.fetch(:cloudwatch_log_exports, [])
 
+  # for serverless v2 the EngineMode property in the DBCluster is to be left unset
+
   RDS_DBCluster(:DBCluster) {
     Engine 'aurora-postgresql'
     EngineVersion engine_version unless engine_version.nil?
-    EngineMode engine_mode unless engine_mode.nil?
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
     EnableCloudwatchLogsExports cloudwatch_log_exports if cloudwatch_log_exports.any?
     PreferredMaintenanceWindow cluster_maintenance_window unless cluster_maintenance_window.nil?
@@ -214,7 +215,7 @@ CloudFormation do
       DBInstanceClass 'db.serverless'
       DBClusterIdentifier Ref(:DBCluster)
     }
-    
+
   else
     Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
     Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
