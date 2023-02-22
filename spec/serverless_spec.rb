@@ -99,10 +99,6 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["EngineVersion"]).to eq(14.6)
       end
       
-      it "to have property EngineMode" do
-          expect(resource["Properties"]["EngineMode"]).to eq("serverless")
-      end
-      
       it "to have property DBClusterParameterGroupName" do
           expect(resource["Properties"]["DBClusterParameterGroupName"]).to eq({"Ref"=>"DBClusterParameterGroup"})
       end
@@ -139,8 +135,12 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
       end
       
-      it "to have property ScalingConfiguration" do
-          expect(resource["Properties"]["ScalingConfiguration"]).to eq({"AutoPause"=>{"Ref"=>"AutoPause"}, "MinCapacity"=>{"Ref"=>"MinCapacity"}, "MaxCapacity"=>{"Ref"=>"MaxCapacity"}, "SecondsUntilAutoPause"=>{"Ref"=>"SecondsUntilAutoPause"}})
+      it "to have property EnableHttpEndpoint" do
+          expect(resource["Properties"]["EnableHttpEndpoint"]).to eq({"Ref"=>"EnableHttpEndpoint"})
+      end
+      
+      it "to have property ServerlessV2ScalingConfiguration" do
+          expect(resource["Properties"]["ServerlessV2ScalingConfiguration"]).to eq({"MinCapacity"=>{"Ref"=>"MinCapacity"}, "MaxCapacity"=>{"Ref"=>"MaxCapacity"}})
       end
       
     end
@@ -162,6 +162,27 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property Tags" do
           expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
+      end
+      
+    end
+    
+    context "ServerlessDBInstance" do
+      let(:resource) { template["Resources"]["ServerlessDBInstance"] }
+
+      it "is of type AWS::RDS::DBInstance" do
+          expect(resource["Type"]).to eq("AWS::RDS::DBInstance")
+      end
+      
+      it "to have property Engine" do
+          expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
+      end
+      
+      it "to have property DBInstanceClass" do
+          expect(resource["Properties"]["DBInstanceClass"]).to eq("db.serverless")
+      end
+      
+      it "to have property DBClusterIdentifier" do
+          expect(resource["Properties"]["DBClusterIdentifier"]).to eq({"Ref"=>"DBCluster"})
       end
       
     end
