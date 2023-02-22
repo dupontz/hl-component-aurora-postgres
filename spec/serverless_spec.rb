@@ -95,6 +95,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(14.6)
+      end
+      
       it "to have property EngineMode" do
           expect(resource["Properties"]["EngineMode"]).to eq("serverless")
       end

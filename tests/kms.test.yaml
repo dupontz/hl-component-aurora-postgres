@@ -4,5 +4,6 @@ test_metadata:
   description: set the description for your test
 
 family: aurora-postgresql9.6
+engine_version: 9.6
 storage_encrypted: true
 kms: true

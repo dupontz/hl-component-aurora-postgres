@@ -7,7 +7,7 @@ test_parameters:
   DatabaseName: mydb
 
 family: aurora-postgresql12
-engine: 12.10
+engine_version: 12.10
 storage_encrypted: true
 
 database_name: ${DatabaseName}

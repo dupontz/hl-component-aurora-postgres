@@ -4,11 +4,11 @@ describe 'compiled component aurora-postgres' do
   
   context 'cftest' do
     it 'compiles test' do
-      expect(system("cfhighlander cftest #{@validate} --tests tests/cloudwatch_log_exports.test.yaml")).to be_truthy
+      expect(system("cfhighlander cftest #{@validate} --tests tests/disable_auto_minor_version_update.test.yaml")).to be_truthy
     end      
   end
   
-  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/cloudwatch_log_exports/aurora-postgres.compiled.yaml") }
+  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/disable_auto_minor_version_update/aurora-postgres.compiled.yaml") }
   
   context "Resource" do
 
@@ -103,10 +103,6 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["DBClusterParameterGroupName"]).to eq({"Ref"=>"DBClusterParameterGroup"})
       end
       
-      it "to have property EnableCloudwatchLogsExports" do
-          expect(resource["Properties"]["EnableCloudwatchLogsExports"]).to eq(["postgresql"])
-      end
-      
       it "to have property SnapshotIdentifier" do
           expect(resource["Properties"]["SnapshotIdentifier"]).to eq({"Fn::If"=>["UseSnapshotID", {"Ref"=>"SnapshotID"}, {"Ref"=>"AWS::NoValue"}]})
       end
@@ -185,6 +181,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
       end
       
+      it "to have property AutoMinorVersionUpgrade" do
+          expect(resource["Properties"]["AutoMinorVersionUpgrade"]).to eq(false)
+      end
+      
       it "to have property PubliclyAccessible" do
           expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
       end
@@ -224,6 +224,10 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property EngineVersion" do
           expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
+      it "to have property AutoMinorVersionUpgrade" do
+          expect(resource["Properties"]["AutoMinorVersionUpgrade"]).to eq(false)
       end
       
       it "to have property PubliclyAccessible" do

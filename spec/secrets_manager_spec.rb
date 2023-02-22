@@ -108,6 +108,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq("9.6.12")
+      end
+      
       it "to have property DBClusterParameterGroupName" do
           expect(resource["Properties"]["DBClusterParameterGroupName"]).to eq({"Ref"=>"DBClusterParameterGroup"})
       end
@@ -190,6 +194,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq("9.6.12")
+      end
+      
       it "to have property PubliclyAccessible" do
           expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
       end
@@ -225,6 +233,10 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property Engine" do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
+      end
+      
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq("9.6.12")
       end
       
       it "to have property PubliclyAccessible" do
