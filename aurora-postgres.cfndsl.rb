@@ -1,10 +1,8 @@
 CloudFormation do
 
-  Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
   Condition("UseUsernameAndPassword", FnEquals(Ref(:SnapshotID), ''))
   Condition("UseSnapshotID", FnNot(FnEquals(Ref(:SnapshotID), '')))
   Condition("CreateHostRecord", FnNot(FnEquals(Ref(:DnsDomain), '')))
-  Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
 
   aurora_tags = []
   tags = external_parameters.fetch(:tags, {})
@@ -163,6 +161,7 @@ CloudFormation do
   end
 
   engine_version = external_parameters.fetch(:engine_version, nil)
+  engine_mode = external_parameters.fetch(:engine_mode, nil)
   database_name = external_parameters.fetch(:database_name, nil)
   storage_encrypted = external_parameters.fetch(:storage_encrypted, nil)
   kms = external_parameters.fetch(:kms, false)
@@ -172,10 +171,11 @@ CloudFormation do
   RDS_DBCluster(:DBCluster) {
     Engine 'aurora-postgresql'
     EngineVersion engine_version unless engine_version.nil?
+    EngineMode engine_mode unless engine_mode.nil?
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
     EnableCloudwatchLogsExports cloudwatch_log_exports if cloudwatch_log_exports.any?
     PreferredMaintenanceWindow cluster_maintenance_window unless cluster_maintenance_window.nil?
-    SnapshotIdentifier FnIf('UseSnapshotID',Ref(:SnapshotID), Ref('AWS::NoValue'))
+    SnapshotIdentifier FnIf('UseSnapshotID', Ref(:SnapshotID), Ref('AWS::NoValue'))
     MasterUsername  FnIf('UseUsernameAndPassword', instance_username, Ref('AWS::NoValue'))
     MasterUserPassword  FnIf('UseUsernameAndPassword', instance_password, Ref('AWS::NoValue'))
     DBSubnetGroupName Ref(:DBClusterSubnetGroup)
@@ -186,6 +186,15 @@ CloudFormation do
     Port external_parameters[:cluster_port]
     Tags aurora_tags
     AssociatedRoles cluster_roles if cluster_roles.any?
+
+    if engine_mode == 'serverless'
+      ScalingConfiguration({
+        AutoPause: Ref('AutoPause'),
+        MinCapacity: Ref('MinCapacity'),
+        MaxCapacity: Ref('MaxCapacity'),
+        SecondsUntilAutoPause: Ref('SecondsUntilAutoPause')
+      })
+    end
   }
 
   instance_parameters = external_parameters.fetch(:instance_parameters, nil)
@@ -201,43 +210,48 @@ CloudFormation do
   maint_window = external_parameters.fetch(:maint_window, nil) # key kept for backwards compatibility
   writer_maintenance_window = external_parameters.fetch(:writer_maintenance_window, maint_window)
 
-  RDS_DBInstance(:DBClusterInstanceWriter) {
-    DBSubnetGroupName Ref(:DBClusterSubnetGroup)
-    DBParameterGroupName Ref(:DBInstanceParameterGroup)
-    DBClusterIdentifier Ref(:DBCluster)
-    Engine 'aurora-postgresql'
-    EngineVersion engine_version unless engine_version.nil?
-    AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
-    PreferredMaintenanceWindow writer_maintenance_window unless writer_maintenance_window.nil?
-    PubliclyAccessible 'false'
-    DBInstanceClass Ref(:WriterInstanceType)
-    Tags aurora_tags
-  }
+  if engine_mode != 'serverless'
+    Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
+    Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
+    
+    RDS_DBInstance(:DBClusterInstanceWriter) {
+      DBSubnetGroupName Ref(:DBClusterSubnetGroup)
+      DBParameterGroupName Ref(:DBInstanceParameterGroup)
+      DBClusterIdentifier Ref(:DBCluster)
+      Engine 'aurora-postgresql'
+      EngineVersion engine_version unless engine_version.nil?
+      AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
+      PreferredMaintenanceWindow writer_maintenance_window unless writer_maintenance_window.nil?
+      PubliclyAccessible 'false'
+      DBInstanceClass Ref(:WriterInstanceType)
+      Tags aurora_tags
+    }
 
-  reader_maintenance_window = external_parameters.fetch(:reader_maintenance_window, nil)
+    reader_maintenance_window = external_parameters.fetch(:reader_maintenance_window, nil)
 
-  RDS_DBInstance(:DBClusterInstanceReader) {
-    Condition(:EnableReader)
-    DBSubnetGroupName Ref(:DBClusterSubnetGroup)
-    DBParameterGroupName Ref(:DBInstanceParameterGroup)
-    DBClusterIdentifier Ref(:DBCluster)
-    Engine 'aurora-postgresql'
-    EngineVersion engine_version unless engine_version.nil?
-    AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
-    PreferredMaintenanceWindow reader_maintenance_window unless reader_maintenance_window.nil?
-    PubliclyAccessible 'false'
-    DBInstanceClass Ref(:ReaderInstanceType)
-    Tags aurora_tags
-  }
+    RDS_DBInstance(:DBClusterInstanceReader) {
+      Condition(:EnableReader)
+      DBSubnetGroupName Ref(:DBClusterSubnetGroup)
+      DBParameterGroupName Ref(:DBInstanceParameterGroup)
+      DBClusterIdentifier Ref(:DBCluster)
+      Engine 'aurora-postgresql'
+      EngineVersion engine_version unless engine_version.nil?
+      AutoMinorVersionUpgrade minor_upgrade unless minor_upgrade.nil?
+      PreferredMaintenanceWindow reader_maintenance_window unless reader_maintenance_window.nil?
+      PubliclyAccessible 'false'
+      DBInstanceClass Ref(:ReaderInstanceType)
+      Tags aurora_tags
+    }
 
-  Route53_RecordSet(:DBClusterReaderRecord) {
-    Condition(:CreateReaderRecord)
-    HostedZoneName FnSub("#{external_parameters[:dns_format]}.")
-    Name FnSub("#{external_parameters[:hostname_read_endpoint]}.#{external_parameters[:dns_format]}.")
-    Type 'CNAME'
-    TTL '60'
-    ResourceRecords [ FnGetAtt('DBCluster','ReadEndpoint.Address') ]
-  }
+    Route53_RecordSet(:DBClusterReaderRecord) {
+      Condition(:CreateReaderRecord)
+      HostedZoneName FnSub("#{external_parameters[:dns_format]}.")
+      Name FnSub("#{external_parameters[:hostname_read_endpoint]}.#{external_parameters[:dns_format]}.")
+      Type 'CNAME'
+      TTL '60'
+      ResourceRecords [ FnGetAtt('DBCluster','ReadEndpoint.Address') ]
+    }
+  end
 
   Route53_RecordSet(:DBHostRecord) {
     Condition(:CreateHostRecord)
