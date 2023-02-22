@@ -7,7 +7,7 @@ test_parameters:
   MyFunction: postgres-lambda
 
 family: aurora-postgresql12
-engine: 12.10
+engine_version: 12.10
 
 invoke_lambdas:
   - my-function

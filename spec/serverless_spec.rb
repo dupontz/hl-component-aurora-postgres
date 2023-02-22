@@ -4,48 +4,14 @@ describe 'compiled component aurora-postgres' do
   
   context 'cftest' do
     it 'compiles test' do
-      expect(system("cfhighlander cftest #{@validate} --tests tests/enable_s3_import_export.test.yaml")).to be_truthy
+      expect(system("cfhighlander cftest #{@validate} --tests tests/serverless.test.yaml")).to be_truthy
     end      
   end
   
-  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/enable_s3_import_export/aurora-postgres.compiled.yaml") }
+  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/serverless/aurora-postgres.compiled.yaml") }
   
   context "Resource" do
 
-    
-    context "Auroras3ExportIAMRole" do
-      let(:resource) { template["Resources"]["Auroras3ExportIAMRole"] }
-
-      it "is of type AWS::IAM::Role" do
-          expect(resource["Type"]).to eq("AWS::IAM::Role")
-      end
-      
-      it "to have property AssumeRolePolicyDocument" do
-          expect(resource["Properties"]["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"rds.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
-      end
-      
-      it "to have property Policies" do
-          expect(resource["Properties"]["Policies"]).to eq([{"PolicyName"=>"invoke-lambda", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"invokelambda0", "Action"=>["S3:PutObject"], "Resource"=>[{"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket"}], "Effect"=>"Allow"}]}}])
-      end
-      
-    end
-    
-    context "Auroras3ImportIAMRole" do
-      let(:resource) { template["Resources"]["Auroras3ImportIAMRole"] }
-
-      it "is of type AWS::IAM::Role" do
-          expect(resource["Type"]).to eq("AWS::IAM::Role")
-      end
-      
-      it "to have property AssumeRolePolicyDocument" do
-          expect(resource["Properties"]["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"rds.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
-      end
-      
-      it "to have property Policies" do
-          expect(resource["Properties"]["Policies"]).to eq([{"PolicyName"=>"invoke-lambda", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"invokelambda0", "Action"=>["S3:PutObject"], "Resource"=>[{"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket"}, {"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket/*"}], "Effect"=>"Allow"}]}}])
-      end
-      
-    end
     
     context "SecurityGroup" do
       let(:resource) { template["Resources"]["SecurityGroup"] }
@@ -105,7 +71,7 @@ describe 'compiled component aurora-postgres' do
       end
       
       it "to have property Family" do
-          expect(resource["Properties"]["Family"]).to eq("aurora-postgresql12")
+          expect(resource["Properties"]["Family"]).to eq("aurora-postgresql14")
       end
       
       it "to have property Parameters" do
@@ -127,6 +93,10 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property Engine" do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
+      end
+      
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(14.6)
       end
       
       it "to have property DBClusterParameterGroupName" do
@@ -153,6 +123,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["VpcSecurityGroupIds"]).to eq([{"Ref"=>"SecurityGroup"}])
       end
       
+      it "to have property StorageEncrypted" do
+          expect(resource["Properties"]["StorageEncrypted"]).to eq(true)
+      end
+      
       it "to have property Port" do
           expect(resource["Properties"]["Port"]).to eq(5432)
       end
@@ -161,8 +135,12 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
       end
       
-      it "to have property AssociatedRoles" do
-          expect(resource["Properties"]["AssociatedRoles"]).to eq([{"FeatureName"=>"s3Export", "RoleArn"=>{"Fn::GetAtt"=>["Auroras3ExportIAMRole", "Arn"]}}, {"FeatureName"=>"s3Import", "RoleArn"=>{"Fn::GetAtt"=>["Auroras3ImportIAMRole", "Arn"]}}])
+      it "to have property EnableHttpEndpoint" do
+          expect(resource["Properties"]["EnableHttpEndpoint"]).to eq({"Ref"=>"EnableHttpEndpoint"})
+      end
+      
+      it "to have property ServerlessV2ScalingConfiguration" do
+          expect(resource["Properties"]["ServerlessV2ScalingConfiguration"]).to eq({"MinCapacity"=>{"Ref"=>"MinCapacity"}, "MaxCapacity"=>{"Ref"=>"MaxCapacity"}})
       end
       
     end
@@ -179,7 +157,7 @@ describe 'compiled component aurora-postgres' do
       end
       
       it "to have property Family" do
-          expect(resource["Properties"]["Family"]).to eq("aurora-postgresql12")
+          expect(resource["Properties"]["Family"]).to eq("aurora-postgresql14")
       end
       
       it "to have property Tags" do
@@ -188,105 +166,23 @@ describe 'compiled component aurora-postgres' do
       
     end
     
-    context "DBClusterInstanceWriter" do
-      let(:resource) { template["Resources"]["DBClusterInstanceWriter"] }
+    context "ServerlessDBInstance" do
+      let(:resource) { template["Resources"]["ServerlessDBInstance"] }
 
       it "is of type AWS::RDS::DBInstance" do
           expect(resource["Type"]).to eq("AWS::RDS::DBInstance")
-      end
-      
-      it "to have property DBSubnetGroupName" do
-          expect(resource["Properties"]["DBSubnetGroupName"]).to eq({"Ref"=>"DBClusterSubnetGroup"})
-      end
-      
-      it "to have property DBParameterGroupName" do
-          expect(resource["Properties"]["DBParameterGroupName"]).to eq({"Ref"=>"DBInstanceParameterGroup"})
-      end
-      
-      it "to have property DBClusterIdentifier" do
-          expect(resource["Properties"]["DBClusterIdentifier"]).to eq({"Ref"=>"DBCluster"})
       end
       
       it "to have property Engine" do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
-      it "to have property PubliclyAccessible" do
-          expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
-      end
-      
       it "to have property DBInstanceClass" do
-          expect(resource["Properties"]["DBInstanceClass"]).to eq({"Ref"=>"WriterInstanceType"})
-      end
-      
-      it "to have property Tags" do
-          expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
-      end
-      
-    end
-    
-    context "DBClusterInstanceReader" do
-      let(:resource) { template["Resources"]["DBClusterInstanceReader"] }
-
-      it "is of type AWS::RDS::DBInstance" do
-          expect(resource["Type"]).to eq("AWS::RDS::DBInstance")
-      end
-      
-      it "to have property DBSubnetGroupName" do
-          expect(resource["Properties"]["DBSubnetGroupName"]).to eq({"Ref"=>"DBClusterSubnetGroup"})
-      end
-      
-      it "to have property DBParameterGroupName" do
-          expect(resource["Properties"]["DBParameterGroupName"]).to eq({"Ref"=>"DBInstanceParameterGroup"})
+          expect(resource["Properties"]["DBInstanceClass"]).to eq("db.serverless")
       end
       
       it "to have property DBClusterIdentifier" do
           expect(resource["Properties"]["DBClusterIdentifier"]).to eq({"Ref"=>"DBCluster"})
-      end
-      
-      it "to have property Engine" do
-          expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
-      end
-      
-      it "to have property PubliclyAccessible" do
-          expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
-      end
-      
-      it "to have property DBInstanceClass" do
-          expect(resource["Properties"]["DBInstanceClass"]).to eq({"Ref"=>"ReaderInstanceType"})
-      end
-      
-      it "to have property Tags" do
-          expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
-      end
-      
-    end
-    
-    context "DBClusterReaderRecord" do
-      let(:resource) { template["Resources"]["DBClusterReaderRecord"] }
-
-      it "is of type AWS::Route53::RecordSet" do
-          expect(resource["Type"]).to eq("AWS::Route53::RecordSet")
-      end
-      
-      it "to have property HostedZoneName" do
-          expect(resource["Properties"]["HostedZoneName"]).to eq({"Fn::Sub"=>"${EnvironmentName}.${DnsDomain}."})
-      end
-      
-      it "to have property Name" do
-          expect(resource["Properties"]["Name"]).to eq({"Fn::Sub"=>"aurora2pg-read.${EnvironmentName}.${DnsDomain}."})
-      end
-      
-      it "to have property Type" do
-          expect(resource["Properties"]["Type"]).to eq("CNAME")
-      end
-      
-      it "to have property TTL" do
-          expect(resource["Properties"]["TTL"]).to eq("60")
-      end
-      
-      it "to have property ResourceRecords" do
-          expect(resource["Properties"]["ResourceRecords"]).to eq([{"Fn::GetAtt"=>["DBCluster", "ReadEndpoint.Address"]}])
       end
       
     end

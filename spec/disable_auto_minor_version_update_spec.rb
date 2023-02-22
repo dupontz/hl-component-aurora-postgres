@@ -4,48 +4,14 @@ describe 'compiled component aurora-postgres' do
   
   context 'cftest' do
     it 'compiles test' do
-      expect(system("cfhighlander cftest #{@validate} --tests tests/enable_s3_import_export.test.yaml")).to be_truthy
+      expect(system("cfhighlander cftest #{@validate} --tests tests/disable_auto_minor_version_update.test.yaml")).to be_truthy
     end      
   end
   
-  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/enable_s3_import_export/aurora-postgres.compiled.yaml") }
+  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/disable_auto_minor_version_update/aurora-postgres.compiled.yaml") }
   
   context "Resource" do
 
-    
-    context "Auroras3ExportIAMRole" do
-      let(:resource) { template["Resources"]["Auroras3ExportIAMRole"] }
-
-      it "is of type AWS::IAM::Role" do
-          expect(resource["Type"]).to eq("AWS::IAM::Role")
-      end
-      
-      it "to have property AssumeRolePolicyDocument" do
-          expect(resource["Properties"]["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"rds.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
-      end
-      
-      it "to have property Policies" do
-          expect(resource["Properties"]["Policies"]).to eq([{"PolicyName"=>"invoke-lambda", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"invokelambda0", "Action"=>["S3:PutObject"], "Resource"=>[{"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket"}], "Effect"=>"Allow"}]}}])
-      end
-      
-    end
-    
-    context "Auroras3ImportIAMRole" do
-      let(:resource) { template["Resources"]["Auroras3ImportIAMRole"] }
-
-      it "is of type AWS::IAM::Role" do
-          expect(resource["Type"]).to eq("AWS::IAM::Role")
-      end
-      
-      it "to have property AssumeRolePolicyDocument" do
-          expect(resource["Properties"]["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"rds.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
-      end
-      
-      it "to have property Policies" do
-          expect(resource["Properties"]["Policies"]).to eq([{"PolicyName"=>"invoke-lambda", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"invokelambda0", "Action"=>["S3:PutObject"], "Resource"=>[{"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket"}, {"Fn::Sub"=>"aws:arn:s3:::postgres-data-export-bucket/*"}], "Effect"=>"Allow"}]}}])
-      end
-      
-    end
     
     context "SecurityGroup" do
       let(:resource) { template["Resources"]["SecurityGroup"] }
@@ -129,6 +95,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
       it "to have property DBClusterParameterGroupName" do
           expect(resource["Properties"]["DBClusterParameterGroupName"]).to eq({"Ref"=>"DBClusterParameterGroup"})
       end
@@ -159,10 +129,6 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property Tags" do
           expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-aurora-postgres"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
-      end
-      
-      it "to have property AssociatedRoles" do
-          expect(resource["Properties"]["AssociatedRoles"]).to eq([{"FeatureName"=>"s3Export", "RoleArn"=>{"Fn::GetAtt"=>["Auroras3ExportIAMRole", "Arn"]}}, {"FeatureName"=>"s3Import", "RoleArn"=>{"Fn::GetAtt"=>["Auroras3ImportIAMRole", "Arn"]}}])
       end
       
     end
@@ -211,6 +177,14 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
+      it "to have property AutoMinorVersionUpgrade" do
+          expect(resource["Properties"]["AutoMinorVersionUpgrade"]).to eq(false)
+      end
+      
       it "to have property PubliclyAccessible" do
           expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
       end
@@ -246,6 +220,14 @@ describe 'compiled component aurora-postgres' do
       
       it "to have property Engine" do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
+      end
+      
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
+      it "to have property AutoMinorVersionUpgrade" do
+          expect(resource["Properties"]["AutoMinorVersionUpgrade"]).to eq(false)
       end
       
       it "to have property PubliclyAccessible" do

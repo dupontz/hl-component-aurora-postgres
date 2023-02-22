@@ -95,6 +95,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
       it "to have property DBClusterParameterGroupName" do
           expect(resource["Properties"]["DBClusterParameterGroupName"]).to eq({"Ref"=>"DBClusterParameterGroup"})
       end
@@ -177,6 +181,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
       it "to have property PubliclyAccessible" do
           expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
       end
@@ -214,6 +222,10 @@ describe 'compiled component aurora-postgres' do
           expect(resource["Properties"]["Engine"]).to eq("aurora-postgresql")
       end
       
+      it "to have property EngineVersion" do
+          expect(resource["Properties"]["EngineVersion"]).to eq(12.1)
+      end
+      
       it "to have property PubliclyAccessible" do
           expect(resource["Properties"]["PubliclyAccessible"]).to eq("false")
       end
@@ -236,11 +248,11 @@ describe 'compiled component aurora-postgres' do
       end
       
       it "to have property HostedZoneName" do
-          expect(resource["Properties"]["HostedZoneName"]).to eq({"Fn::Join"=>["", [{"Ref"=>"EnvironmentName"}, ".", {"Ref"=>"DnsDomain"}, "."]]})
+          expect(resource["Properties"]["HostedZoneName"]).to eq({"Fn::Sub"=>"${EnvironmentName}.${DnsDomain}."})
       end
       
       it "to have property Name" do
-          expect(resource["Properties"]["Name"]).to eq({"Fn::Join"=>["", ["aurora2pg-read", ".", {"Ref"=>"EnvironmentName"}, ".", {"Ref"=>"DnsDomain"}, "."]]})
+          expect(resource["Properties"]["Name"]).to eq({"Fn::Sub"=>"aurora2pg-read.${EnvironmentName}.${DnsDomain}."})
       end
       
       it "to have property Type" do
@@ -265,11 +277,11 @@ describe 'compiled component aurora-postgres' do
       end
       
       it "to have property HostedZoneName" do
-          expect(resource["Properties"]["HostedZoneName"]).to eq({"Fn::Join"=>["", [{"Ref"=>"EnvironmentName"}, ".", {"Ref"=>"DnsDomain"}, "."]]})
+          expect(resource["Properties"]["HostedZoneName"]).to eq({"Fn::Sub"=>"${EnvironmentName}.${DnsDomain}."})
       end
       
       it "to have property Name" do
-          expect(resource["Properties"]["Name"]).to eq({"Fn::Join"=>["", ["aurora2pg", ".", {"Ref"=>"EnvironmentName"}, ".", {"Ref"=>"DnsDomain"}, "."]]})
+          expect(resource["Properties"]["Name"]).to eq({"Fn::Sub"=>"aurora2pg.${EnvironmentName}.${DnsDomain}."})
       end
       
       it "to have property Type" do

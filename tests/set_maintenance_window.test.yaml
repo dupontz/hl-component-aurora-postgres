@@ -4,7 +4,7 @@ test_metadata:
   description: set the cluster and db instance maintenance windows
 
 family: aurora-postgresql12
-engine: 12.10
+engine_version: 12.10
 
 cluster_maintenance_window: Sun:05:00-Sun:06:00
 writer_maintenance_window: Sun:06:00-Sun:07:00

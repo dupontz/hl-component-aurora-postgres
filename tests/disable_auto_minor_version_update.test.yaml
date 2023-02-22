@@ -4,6 +4,6 @@ test_metadata:
   description: set the description for your test
 
 family: aurora-postgresql12
-engine: 12.10
+engine_version: 12.10
 
 minor_upgrade: false
