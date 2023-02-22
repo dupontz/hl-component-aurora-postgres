@@ -188,11 +188,9 @@ CloudFormation do
     AssociatedRoles cluster_roles if cluster_roles.any?
 
     if engine_mode == 'serverless'
-      ScalingConfiguration({
-        AutoPause: Ref('AutoPause'),
+      ServerlessV2ScalingConfiguration({
         MinCapacity: Ref('MinCapacity'),
-        MaxCapacity: Ref('MaxCapacity'),
-        SecondsUntilAutoPause: Ref('SecondsUntilAutoPause')
+        MaxCapacity: Ref('MaxCapacity')
       })
     end
   }
@@ -210,10 +208,17 @@ CloudFormation do
   maint_window = external_parameters.fetch(:maint_window, nil) # key kept for backwards compatibility
   writer_maintenance_window = external_parameters.fetch(:writer_maintenance_window, maint_window)
 
-  if engine_mode != 'serverless'
+  if engine_mode == 'serverless'
+    RDS_DBInstance(:ServerlessDBInstance) {
+      Engine 'aurora-postgres'
+      DBInstanceClass 'db.serverless'
+      DBClusterIdentifier Ref(:DBCluster)
+    }
+    
+  else
     Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
     Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
-    
+
     RDS_DBInstance(:DBClusterInstanceWriter) {
       DBSubnetGroupName Ref(:DBClusterSubnetGroup)
       DBParameterGroupName Ref(:DBInstanceParameterGroup)
