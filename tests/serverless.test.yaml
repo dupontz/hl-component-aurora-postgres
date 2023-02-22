@@ -1,0 +1,9 @@
+test_metadata:
+  type: config
+  name: serverless
+  description: set the description for your test
+
+family: aurora-postgresql14
+engine: 14.6
+storage_encrypted: true
+engine_mode: serverless
