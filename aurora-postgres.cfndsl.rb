@@ -211,7 +211,7 @@ CloudFormation do
 
   if engine_mode == 'serverless'
     RDS_DBInstance(:ServerlessDBInstance) {
-      Engine 'aurora-postgres'
+      Engine 'aurora-postgresql'
       DBInstanceClass 'db.serverless'
       DBClusterIdentifier Ref(:DBCluster)
     }
