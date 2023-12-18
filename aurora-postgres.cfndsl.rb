@@ -94,9 +94,17 @@ CloudFormation do
       ToPort: cluster_port,
     }
     if rule['security_group_id']
-      sg_rule['SourceSecurityGroupId'] = FnSub(rule['security_group_id'])
+      if rule['security_group_id'].is_a?(Hash)
+        sg_rule['SourceSecurityGroupId'] = rule['security_group_id']
+      else
+        sg_rule['SourceSecurityGroupId'] = FnSub(rule['security_group_id'])
+      end
     else
-      sg_rule['CidrIp'] = FnSub(rule['ip'])
+      if rule['ip'].is_a?(Hash)
+        sg_rule['CidrIp'] = rule['ip']
+      else
+        sg_rule['CidrIp'] = FnSub(rule['ip'])
+      end
     end
     if rule['desc']
       sg_rule['Description'] = FnSub(rule['desc'])

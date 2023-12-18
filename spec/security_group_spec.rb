@@ -29,7 +29,14 @@ describe 'compiled component aurora-postgres' do
       end
       
       it "to have property SecurityGroupIngress" do
-          expect(resource["Properties"]["SecurityGroupIngress"]).to eq([{"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "SourceSecurityGroupId"=>{"Fn::Sub"=>"sg-328h4242u3h"}, "Description"=>{"Fn::Sub"=>"access from my app"}}, {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "CidrIp"=>{"Fn::Sub"=>"10.0.0.0/16"}, "Description"=>{"Fn::Sub"=>"access from peered vpc"}}])
+          expect(resource["Properties"]["SecurityGroupIngress"]).to eq([
+            {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "SourceSecurityGroupId"=>{"Fn::Sub"=>"sg-328h4242u3h"}, "Description"=>{"Fn::Sub"=>"access from my app"}},
+            {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "CidrIp"=>{"Fn::Sub"=>"10.0.0.0/16"}, "Description"=>{"Fn::Sub"=>"access from peered vpc"}},
+            {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "CidrIp"=>{"Fn::Sub"=>"${VPCCidr}"}, "Description"=>{"Fn::Sub"=>"access from peered vpc 1"}},
+            {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "CidrIp"=>{"Fn::Join"=>["", [{"Ref"=>"VPCCidr"}]]}, "Description"=>{"Fn::Sub"=>"access from peered vpc 2"}},
+            {"FromPort"=>5432, "IpProtocol"=>"TCP", "ToPort"=>5432, "SourceSecurityGroupId"=>{"Fn::Join"=>["", [{"Ref"=>"SGId"}]]}, "Description"=>{"Fn::Sub"=>"access from a external sg"}},
+            
+        ])
       end
       
       it "to have property SecurityGroupEgress" do
