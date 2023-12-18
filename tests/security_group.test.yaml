@@ -3,6 +3,10 @@ test_metadata:
   name: security_group
   description: set the description for your test
 
+test_parameters:
+  VPCCidr: 10.1.0.0/16
+  SGId: sg-328h4242u3h
+
 family: aurora-postgresql9.6
 engine_version: 9.6
 storage_encrypted: true
@@ -14,3 +18,18 @@ security_group_rules:
   -
     ip: 10.0.0.0/16
     desc: access from peered vpc
+  -
+    ip: ${VPCCidr}
+    desc: access from peered vpc 1
+  -
+    ip:
+      Fn::Join:
+        - ''
+        - - Ref: VPCCidr
+    desc: access from peered vpc 2
+  -
+    security_group_id:
+      Fn::Join:
+        - ''
+        - - Ref: SGId
+    desc: access from a external sg
