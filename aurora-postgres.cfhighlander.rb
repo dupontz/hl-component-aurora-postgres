@@ -12,6 +12,7 @@ CfhighlanderTemplate do
     ComponentParam 'VPCId', type: 'AWS::EC2::VPC::Id'
     ComponentParam 'SubnetIds', type: 'CommaDelimitedList'
     ComponentParam 'KmsKeyId' if (defined? kms) && (kms)
+    ComponentParam 'GlobalClusterIdentifier', ''
 
     if defined?(engine_mode) && engine_mode == 'serverless'
       ComponentParam 'MaxCapacity', '2'
