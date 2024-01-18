@@ -1,8 +1,9 @@
 CloudFormation do
 
-  Condition("UseUsernameAndPassword", FnEquals(Ref(:SnapshotID), ''))
   Condition("UseSnapshotID", FnNot(FnEquals(Ref(:SnapshotID), '')))
   Condition("CreateHostRecord", FnNot(FnEquals(Ref(:DnsDomain), '')))
+  Condition("UseGlobalClusterIdentifier", FnNot(FnEquals(Ref(:GlobalClusterIdentifier), '')))
+  Condition("UseUsernameAndPassword", FnAnd([FnEquals(Ref(:SnapshotID), ''), FnEquals(Ref(:GlobalClusterIdentifier), '')]))
 
   aurora_tags = []
   tags = external_parameters.fetch(:tags, {})
@@ -195,6 +196,7 @@ CloudFormation do
     Port external_parameters[:cluster_port]
     Tags aurora_tags
     AssociatedRoles cluster_roles if cluster_roles.any?
+    GlobalClusterIdentifier FnIf('UseGlobalClusterIdentifier', Ref('GlobalClusterIdentifier'), Ref('AWS::NoValue'))
 
     if engine_mode == 'serverless'
       EnableHttpEndpoint Ref(:EnableHttpEndpoint)
