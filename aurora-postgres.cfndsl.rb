@@ -221,7 +221,7 @@ CloudFormation do
   writer_maintenance_window = external_parameters.fetch(:writer_maintenance_window, maint_window)
 
   if engine_mode == 'serverless'
-    RDS_DBInstance() {
+    RDS_DBInstance(:ServerlessDBInstance) {
       Engine 'aurora-postgresql'
       DBInstanceClass 'db.serverless'
       DBClusterIdentifier Ref(:DBCluster)
@@ -231,7 +231,7 @@ CloudFormation do
     Condition("CreateReaderRecord", FnAnd([FnEquals(Ref("EnableReader"), 'true'), Condition('CreateHostRecord')]))
     Condition("EnableReader", FnEquals(Ref("EnableReader"), 'true'))
 
-    RDS_DBInstance() {
+    RDS_DBInstance(:DBClusterInstance) {
       DBSubnetGroupName Ref(:DBClusterSubnetGroup)
       DBParameterGroupName Ref(:DBInstanceParameterGroup)
       DBClusterIdentifier Ref(:DBCluster)
@@ -246,7 +246,7 @@ CloudFormation do
 
     reader_maintenance_window = external_parameters.fetch(:reader_maintenance_window, nil)
 
-    RDS_DBInstance() {
+    RDS_DBInstance(:DBClusterInstance) {
       Condition(:EnableReader)
       DBSubnetGroupName Ref(:DBClusterSubnetGroup)
       DBParameterGroupName Ref(:DBInstanceParameterGroup)
