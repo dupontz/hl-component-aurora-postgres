@@ -246,7 +246,7 @@ CloudFormation do
 
     reader_maintenance_window = external_parameters.fetch(:reader_maintenance_window, nil)
 
-    RDS_DBInstance(:DBClusterInstance) {
+    RDS_DBInstance(:DBClusterInstances) {
       Condition(:EnableReader)
       DBSubnetGroupName Ref(:DBClusterSubnetGroup)
       DBParameterGroupName Ref(:DBInstanceParameterGroup)
