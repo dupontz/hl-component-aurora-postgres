@@ -13,6 +13,21 @@
 | SnapshotId | Snapshot ID to provision from | None | false | string
 | WriterInstanceType | Writer instance type *if engine is set to provisioned* | None | false | string
 | ReaderInstanceType | Reader instance type *if engine is set to provisioned* | None | false | string
+| StorageType | Cluster storage configuration. `aurora` is Aurora Standard, `aurora-iopt1` is Aurora I/O-Optimized. The `StorageType` property is only set on the DB cluster when `aurora-iopt1` is selected | aurora | false | string | ['aurora','aurora-iopt1']
+
+### Storage Type
+
+By default the `StorageType` property is omitted from the DB cluster, so existing clusters keep their current (Aurora Standard) storage configuration.
+To opt into [Aurora I/O-Optimized](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.StorageReliability.html#aurora-storage-type) set the `StorageType` parameter to `aurora-iopt1`:
+
+```ruby
+  Component name:'database', template: 'aurora-postgres' do
+    parameter name: 'StorageType', value: 'aurora-iopt1'
+  end
+```
+
+I/O-Optimized requires a supported engine version (Aurora PostgreSQL 13.10, 14.7, 15.2 and higher). Switching an existing cluster between storage types is an in-place modification, but AWS limits how often you can switch back to Aurora Standard (once every 30 days).
+
 ## Outputs/Exports
 
 | Name | Value | Exported |

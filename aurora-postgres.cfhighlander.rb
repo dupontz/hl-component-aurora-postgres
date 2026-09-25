@@ -23,7 +23,7 @@ CfhighlanderTemplate do
       ComponentParam 'ReaderInstanceType'
       ComponentParam 'EnableReader', 'false', allowedValues: ['true', 'false']
     end
-    
+    ComponentParam 'StorageType', 'aurora', allowedValues: ['aurora', 'aurora-iopt1']
     ComponentParam 'NamespaceId' if defined? service_discovery
   end
 

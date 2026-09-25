@@ -4,6 +4,7 @@ CloudFormation do
   Condition("CreateHostRecord", FnNot(FnEquals(Ref(:DnsDomain), '')))
   Condition("UseGlobalClusterIdentifier", FnNot(FnEquals(Ref(:GlobalClusterIdentifier), '')))
   Condition("UseUsernameAndPassword", FnAnd([FnEquals(Ref(:SnapshotID), ''), FnEquals(Ref(:GlobalClusterIdentifier), '')]))
+  Condition("UseIOOptimizedStorage", FnEquals(Ref(:StorageType), 'aurora-iopt1'))
 
   aurora_tags = []
   tags = external_parameters.fetch(:tags, {})
@@ -192,6 +193,7 @@ CloudFormation do
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
     DatabaseName FnSub(database_name) unless database_name.nil?
     StorageEncrypted storage_encrypted unless storage_encrypted.nil?
+    StorageType FnIf('UseIOOptimizedStorage', Ref(:StorageType), Ref('AWS::NoValue'))
     KmsKeyId Ref('KmsKeyId') if kms
     Port external_parameters[:cluster_port]
     Tags aurora_tags

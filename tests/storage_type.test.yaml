@@ -1,0 +1,8 @@
+test_metadata:
+  type: config
+  name: storage_type
+  description: test the StorageType parameter for Aurora I/O-Optimized storage
+
+family: aurora-postgresql15
+engine_version: 15.4
+storage_encrypted: true
