@@ -14,12 +14,20 @@ describe 'compiled component aurora-postgres' do
     context "StorageType" do
       let(:parameter) { template["Parameters"]["StorageType"] }
 
-      it "defaults to aurora" do
-        expect(parameter["Default"]).to eq("aurora")
+      it "defaults to empty" do
+        expect(parameter["Default"]).to eq("")
       end
 
-      it "allows aurora and aurora-iopt1" do
-        expect(parameter["AllowedValues"]).to eq(["aurora", "aurora-iopt1"])
+      it "allows empty, aurora and aurora-iopt1" do
+        expect(parameter["AllowedValues"]).to eq(["", "aurora", "aurora-iopt1"])
+      end
+    end
+  end
+
+  context "Condition" do
+    context "SetStorageType" do
+      it "is true when StorageType is not empty" do
+        expect(template["Conditions"]["SetStorageType"]).to eq({"Fn::Not"=>[{"Fn::Equals"=>[{"Ref"=>"StorageType"}, ""]}]})
       end
     end
   end
@@ -33,11 +41,11 @@ describe 'compiled component aurora-postgres' do
       end
 
       it "to have property StorageType" do
-        expect(resource["Properties"]["StorageType"]).to eq({"Ref"=>"StorageType"})
+        expect(resource["Properties"]["StorageType"]).to eq({"Fn::If"=>["SetStorageType", {"Ref"=>"StorageType"}, {"Ref"=>"AWS::NoValue"}]})
       end
 
       it "to have property EngineVersion" do
-        expect(resource["Properties"]["EngineVersion"]).to eq(14.7)
+        expect(resource["Properties"]["EngineVersion"]).to eq("14.7")
       end
     end
   end

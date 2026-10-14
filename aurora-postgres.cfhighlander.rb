@@ -26,7 +26,7 @@ CfhighlanderTemplate do
     
     ComponentParam 'NamespaceId' if defined? service_discovery
     ComponentParam 'EnhancedMonitoringInterval', '0', allowedValues: ['0', '1', '5', '10', '15', '30', '60']
-    ComponentParam 'StorageType', 'aurora', allowedValues: ['aurora', 'aurora-iopt1']
+    ComponentParam 'StorageType', '', allowedValues: ['', 'aurora', 'aurora-iopt1']
   end
 
 end
