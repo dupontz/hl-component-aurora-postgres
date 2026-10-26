@@ -3,6 +3,7 @@ CloudFormation do
   Condition("UseSnapshotID", FnNot(FnEquals(Ref(:SnapshotID), '')))
   Condition("CreateHostRecord", FnNot(FnEquals(Ref(:DnsDomain), '')))
   Condition("UseGlobalClusterIdentifier", FnNot(FnEquals(Ref(:GlobalClusterIdentifier), '')))
+  Condition("SetStorageType", FnNot(FnEquals(Ref(:StorageType), '')))
   Condition("UseUsernameAndPassword", FnAnd([FnEquals(Ref(:SnapshotID), ''), FnEquals(Ref(:GlobalClusterIdentifier), '')]))
 
   aurora_tags = []
@@ -194,6 +195,7 @@ CloudFormation do
     VpcSecurityGroupIds [ Ref(:SecurityGroup) ]
     DatabaseName FnSub(database_name) unless database_name.nil?
     StorageEncrypted storage_encrypted unless storage_encrypted.nil?
+    StorageType FnIf('SetStorageType', Ref(:StorageType), Ref('AWS::NoValue'))
     DeletionProtection deletion_protection unless deletion_protection.nil?
     BackupRetentionPeriod backup_retention_period unless backup_retention_period.nil?
     KmsKeyId Ref('KmsKeyId') if kms

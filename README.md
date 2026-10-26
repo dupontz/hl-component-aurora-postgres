@@ -14,6 +14,7 @@
 | WriterInstanceType | Writer instance type *if engine is set to provisioned* | None | false | string
 | ReaderInstanceType | Reader instance type *if engine is set to provisioned* | None | false | string
 | EnhancedMonitoringInterval | Enhanced Monitoring granularity in seconds. Set to 0 to disable. | 0 | false | string | ['0','1','5','10','15','30','60']
+| StorageType | Aurora storage configuration. Use `aurora-iopt1` for I/O-Optimized. Leave empty to not set the property. | '' | false | string | ['','aurora','aurora-iopt1']
 ## Outputs/Exports
 
 | Name | Value | Exported |
@@ -85,6 +86,21 @@ EnhancedMonitoringInterval=60
 ```
 
 When enabled, the component creates an IAM role with the `AmazonRDSEnhancedMonitoringRole` managed policy and configures monitoring on all DB instances (writer, reader, serverless). Set to `0` to disable (default).
+
+## Storage Type
+
+Aurora supports two cluster storage configurations:
+
+- `aurora` — Aurora Standard (the AWS default)
+- `aurora-iopt1` — Aurora I/O-Optimized (predictable pricing with no charge for I/O operations)
+
+Select at deploy time with the `StorageType` parameter. It defaults to empty, which leaves the `StorageType` property unset on the cluster so AWS applies its default (Aurora Standard) and existing stacks are unaffected:
+
+```bash
+StorageType=aurora-iopt1
+```
+
+I/O-Optimized requires a supported Aurora PostgreSQL engine version (e.g. 13.10+, 14.7+, 15.2+). You can switch from I/O-Optimized to Standard at any time; switching to I/O-Optimized is limited to once every 30 days. To switch back to Standard, set `StorageType=aurora` explicitly rather than clearing the parameter.
 
 ## Cfhighlander Setup
 
