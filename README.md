@@ -28,6 +28,16 @@ To opt into [Aurora I/O-Optimized](https://docs.aws.amazon.com/AmazonRDS/latest/
 
 I/O-Optimized requires a supported engine version (Aurora PostgreSQL 13.10, 14.7, 15.2 and higher). Switching an existing cluster between storage types is an in-place modification, but AWS limits how often you can switch back to Aurora Standard (once every 30 days).
 
+### Deletion Policy
+
+By default the DB cluster has no `DeletionPolicy`, so CloudFormation takes a final snapshot when the cluster is deleted or replaced. Set `deletion_policy` in the component config to change it. The value is applied as both the `DeletionPolicy` and the `UpdateReplacePolicy` of the DB cluster, and must be one of `Delete`, `Retain`, `RetainExceptOnCreate` or `Snapshot`.
+
+```yaml
+deletion_policy: Delete
+```
+
+With `Delete` the cluster's data is lost when the cluster is deleted or replaced. Use it only for clusters that can be rebuilt, such as one restored from a snapshot on demand.
+
 ## Outputs/Exports
 
 | Name | Value | Exported |

@@ -1,0 +1,6 @@
+test_metadata:
+  type: config
+  name: deletion_policy
+  description: delete the cluster without a final snapshot
+
+deletion_policy: Delete

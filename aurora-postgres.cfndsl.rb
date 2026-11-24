@@ -178,9 +178,21 @@ CloudFormation do
   cluster_maintenance_window = external_parameters.fetch(:cluster_maintenance_window, nil)
   cloudwatch_log_exports = external_parameters.fetch(:cloudwatch_log_exports, [])
 
+  # unset keeps CloudFormation's default for AWS::RDS::DBCluster, a final snapshot when the
+  # cluster is deleted or replaced
+  deletion_policy = external_parameters.fetch(:deletion_policy, nil)
+  allowed_deletion_policies = %w(Delete Retain RetainExceptOnCreate Snapshot)
+  unless deletion_policy.nil? || allowed_deletion_policies.include?(deletion_policy)
+    raise ArgumentError, "deletion_policy must be one of #{allowed_deletion_policies.join(', ')}, got #{deletion_policy}"
+  end
+
   # for serverless v2 the EngineMode property in the DBCluster is to be left unset
 
   RDS_DBCluster(:DBCluster) {
+    unless deletion_policy.nil?
+      DeletionPolicy deletion_policy
+      UpdateReplacePolicy deletion_policy
+    end
     Engine 'aurora-postgresql'
     EngineVersion engine_version unless engine_version.nil?
     DBClusterParameterGroupName Ref(:DBClusterParameterGroup)
