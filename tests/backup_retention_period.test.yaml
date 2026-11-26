@@ -1,0 +1,9 @@
+test_metadata:
+  type: config
+  name: backup_retention_period
+  description: set the number of days automated backups are kept
+
+family: aurora-postgresql15
+engine_version: 15.4
+
+backup_retention_period: 8

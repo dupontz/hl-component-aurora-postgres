@@ -68,6 +68,9 @@ engine_version: '13.4'
 writer_instance: db.r3.large
 reader_instance: db.r3.large
 
+# days to keep automated backups (1-35). Unset leaves the RDS default of 1 day.
+backup_retention_period: 7
+
 master_login: 
     username_ssm_param: /${EnvironmentName}/myapp/dbuser
     password_ssm_param: /${EnvironmentName}/myapp/dbpass
