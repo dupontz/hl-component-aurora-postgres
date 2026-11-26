@@ -1,0 +1,7 @@
+test_metadata:
+  type: config
+  name: deletion_protection
+  description: the DeletionProtection parameter sets deletion protection on the DB cluster
+
+family: aurora-postgresql15
+engine_version: 15.4

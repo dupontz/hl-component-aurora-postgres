@@ -187,6 +187,7 @@ CloudFormation do
     EnableCloudwatchLogsExports cloudwatch_log_exports if cloudwatch_log_exports.any?
     PreferredMaintenanceWindow cluster_maintenance_window unless cluster_maintenance_window.nil?
     BackupRetentionPeriod Ref(:BackupRetentionPeriod)
+    DeletionProtection Ref(:DeletionProtection)
     SnapshotIdentifier FnIf('UseSnapshotID', Ref(:SnapshotID), Ref('AWS::NoValue'))
     MasterUsername  FnIf('UseUsernameAndPassword', instance_username, Ref('AWS::NoValue'))
     MasterUserPassword  FnIf('UseUsernameAndPassword', instance_password, Ref('AWS::NoValue'))

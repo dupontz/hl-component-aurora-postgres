@@ -14,6 +14,7 @@
 | WriterInstanceType | Writer instance type *if engine is set to provisioned* | None | false | string
 | ReaderInstanceType | Reader instance type *if engine is set to provisioned* | None | false | string
 | BackupRetentionPeriod | Number of days automated backups are kept | 1 | false | Number | 1-35
+| DeletionProtection | Stop the DB cluster from being deleted while `true` | false | false | string | ['true','false']
 | StorageType | Cluster storage configuration. `aurora` is Aurora Standard, `aurora-iopt1` is Aurora I/O-Optimized. The `StorageType` property is only set on the DB cluster when `aurora-iopt1` is selected | aurora | false | string | ['aurora','aurora-iopt1']
 
 ### Storage Type
