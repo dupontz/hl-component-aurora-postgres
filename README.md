@@ -13,6 +13,7 @@
 | SnapshotId | Snapshot ID to provision from | None | false | string
 | WriterInstanceType | Writer instance type *if engine is set to provisioned* | None | false | string
 | ReaderInstanceType | Reader instance type *if engine is set to provisioned* | None | false | string
+| BackupRetentionPeriod | Number of days automated backups are kept | 1 | false | Number | 1-35
 | StorageType | Cluster storage configuration. `aurora` is Aurora Standard, `aurora-iopt1` is Aurora I/O-Optimized. The `StorageType` property is only set on the DB cluster when `aurora-iopt1` is selected | aurora | false | string | ['aurora','aurora-iopt1']
 
 ### Storage Type
@@ -67,9 +68,6 @@ engine_version: '13.4'
 
 writer_instance: db.r3.large
 reader_instance: db.r3.large
-
-# days to keep automated backups (1-35). Unset leaves the RDS default of 1 day.
-backup_retention_period: 7
 
 master_login: 
     username_ssm_param: /${EnvironmentName}/myapp/dbuser

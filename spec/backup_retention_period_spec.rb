@@ -10,6 +10,28 @@ describe 'compiled component aurora-postgres' do
 
   let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/backup_retention_period/aurora-postgres.compiled.yaml") }
 
+  context "Parameter" do
+
+    context "BackupRetentionPeriod" do
+      let(:parameter) { template["Parameters"]["BackupRetentionPeriod"] }
+
+      it "is of type Number" do
+          expect(parameter["Type"]).to eq("Number")
+      end
+
+      it "defaults to 1" do
+          expect(parameter["Default"]).to eq(1).or eq("1")
+      end
+
+      it "allows 1 to 35 days" do
+          expect(parameter["MinValue"]).to eq(1)
+          expect(parameter["MaxValue"]).to eq(35)
+      end
+
+    end
+
+  end
+
   context "Resource" do
 
     context "DBCluster" do
@@ -20,7 +42,7 @@ describe 'compiled component aurora-postgres' do
       end
 
       it "to have property BackupRetentionPeriod" do
-          expect(resource["Properties"]["BackupRetentionPeriod"]).to eq(8)
+          expect(resource["Properties"]["BackupRetentionPeriod"]).to eq({"Ref"=>"BackupRetentionPeriod"})
       end
 
     end

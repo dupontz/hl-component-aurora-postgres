@@ -24,6 +24,8 @@ CfhighlanderTemplate do
       ComponentParam 'EnableReader', 'false', allowedValues: ['true', 'false']
     end
     ComponentParam 'StorageType', 'aurora', allowedValues: ['aurora', 'aurora-iopt1']
+    ComponentParam 'BackupRetentionPeriod', '1', type: 'Number', minValue: 1, maxValue: 35,
+      description: 'Number of days automated backups are kept (1-35)'
     ComponentParam 'NamespaceId' if defined? service_discovery
   end
 
